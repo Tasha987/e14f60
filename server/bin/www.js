@@ -38,7 +38,7 @@ io.on("connection", (socket) => {
     }
     // send the user who just went online to everyone else who is already online
     socket.broadcast.emit("add-online-user", id);
-  });
+  })
 
   socket.on("new-message", (data) => {
     socket.broadcast.emit("new-message", {
@@ -91,6 +91,7 @@ function normalizePort(val) {
 
 function onError(error) {
   if (error.syscall !== "listen") {
+    console.log(error.message)
     throw error;
   }
 
