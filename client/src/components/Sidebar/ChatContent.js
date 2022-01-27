@@ -26,7 +26,6 @@ const useStyles = makeStyles((theme) => ({
   },
   unreadCount: {
     transition: `opacity ${duration}ms ease-in-out`,
-    // position: "relative",
     margin: 0,
     marginRight: 20,
     fontSize: 12,
@@ -35,7 +34,6 @@ const useStyles = makeStyles((theme) => ({
     height: 20,
     minWidth: 20,
     padding: "1px 6px 1px 6px",
-    // margin: 0,
     color: "white",
     fontWeight: "bold",
     textAlign: "center",

@@ -24,8 +24,6 @@ const useStyles = makeStyles(() => ({
     fontSize: 16,
     fontWeight: "bold",
     marginLeft: 17,
-    flexGrow: 0,
-    flexShrink: 0,
   },
   ellipsis: {
     color: "#95A7C4",

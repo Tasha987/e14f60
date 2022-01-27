@@ -1,0 +1,494 @@
+diff --git a/changes.diff b/changes.diff
+new file mode 100644
+index 0000000..e69de29
+diff --git a/client/src/components/ActiveChat/ActiveChat.js b/client/src/components/ActiveChat/ActiveChat.js
+index ced8453..1302948 100644
+--- a/client/src/components/ActiveChat/ActiveChat.js
++++ b/client/src/components/ActiveChat/ActiveChat.js
+@@ -1,13 +1,16 @@
+-import React from "react";
++import React, { useEffect, useRef } from "react";
+ import { makeStyles } from "@material-ui/core/styles";
+ import { Box } from "@material-ui/core";
+ import { Input, Header, Messages } from "./index";
+ import { connect } from "react-redux";
++import { updateLastViewed } from "./../../store/utils/thunkCreators";
+ 
+ const useStyles = makeStyles(() => ({
+   root: {
+     display: "flex",
+     flexGrow: 8,
++    flexShrink: 8,
++    flexBasis: 0, // so it calcs growth from 0 -- width does not grow unexpectedly!
+     flexDirection: "column"
+   },
+   chatContainer: {
+@@ -25,6 +28,15 @@ const ActiveChat = (props) => {
+   const { user } = props;
+   const conversation = props.conversation || {};
+ 
++  useEffect(() => {
++  const update = async () => {
++      if (conversation.messages) {
++        await props.updateLastViewed(conversation.messages[conversation.messages.length - 1])
++      }
++    }
++    update()
++  },[props.activeConversation]);
++
+   return (
+     <Box className={classes.root}>
+       {conversation.otherUser && (
+@@ -53,6 +65,7 @@ const ActiveChat = (props) => {
+ 
+ const mapStateToProps = (state) => {
+   return {
++    activeConversation: state.activeConversation,
+     user: state.user,
+     conversation:
+       state.conversations &&
+@@ -62,4 +75,12 @@ const mapStateToProps = (state) => {
+   };
+ };
+ 
+-export default connect(mapStateToProps, null)(ActiveChat);
++const mapDispatchToProps = (dispatch) => {
++  return {
++    updateLastViewed: (id) => {
++      dispatch(updateLastViewed(id))
++    }
++  };
++};
++
++export default connect(mapStateToProps, mapDispatchToProps)(ActiveChat);
+diff --git a/client/src/components/Sidebar/Chat.js b/client/src/components/Sidebar/Chat.js
+index cc2a371..0dcbe74 100644
+--- a/client/src/components/Sidebar/Chat.js
++++ b/client/src/components/Sidebar/Chat.js
+@@ -7,6 +7,7 @@ import { connect } from "react-redux";
+ 
+ const useStyles = makeStyles((theme) => ({
+   root: {
++    position: "relative",
+     borderRadius: 8,
+     height: 80,
+     boxShadow: "0 2px 10px 0 rgba(88,133,196,0.05)",
+@@ -16,14 +17,14 @@ const useStyles = makeStyles((theme) => ({
+     "&:hover": {
+       cursor: "grab"
+     }
+-  }
++  },
+ }));
+ 
+ const Chat = (props) => {
+   const classes = useStyles();
+   const { conversation } = props;
+   const { otherUser } = conversation;
+-
++  
+   const handleClick = async (conversation) => {
+     await props.setActiveChat(conversation.otherUser.username);
+   };
+@@ -45,7 +46,7 @@ const mapDispatchToProps = (dispatch) => {
+   return {
+     setActiveChat: (id) => {
+       dispatch(setActiveChat(id));
+-    }
++    },
+   };
+ };
+ 
+diff --git a/client/src/components/Sidebar/ChatContent.js b/client/src/components/Sidebar/ChatContent.js
+index 9444949..892e99f 100644
+--- a/client/src/components/Sidebar/ChatContent.js
++++ b/client/src/components/Sidebar/ChatContent.js
+@@ -1,5 +1,6 @@
+ import React from "react";
+ import { Box, Typography } from "@material-ui/core";
++import { Transition } from "react-transition-group"
+ import { makeStyles } from "@material-ui/core/styles";
+ 
+ const useStyles = makeStyles((theme) => ({
+@@ -8,6 +9,7 @@ const useStyles = makeStyles((theme) => ({
+     justifyContent: "space-between",
+     marginLeft: 20,
+     flexGrow: 1,
++    position: "relative",
+   },
+   username: {
+     fontWeight: "bold",
+@@ -18,13 +20,43 @@ const useStyles = makeStyles((theme) => ({
+     color: "#9CADC8",
+     letterSpacing: -0.17,
+   },
++  newMessage: {
++    color: "#000000",
++    fontWeight: 600,
++  },
++  unreadCount: {
++    transition: `opacity ${duration}ms ease-in-out`,
++    // position: "relative",
++    margin: 0,
++    marginRight: 20,
++    fontSize: 12,
++    background: "#3F92FF",
++    borderRadius: 10,
++    height: 20,
++    minWidth: 20,
++    padding: "1px 6px 1px 6px",
++    // margin: 0,
++    color: "white",
++    fontWeight: "bold",
++    textAlign: "center",
++    alignSelf: "center",
++    opacity: 0,
++  },
+ }));
+ 
++const duration = 300
++
++const transitionStyles = {
++  entering: { opacity: 1 },
++  entered:  { opacity: 1 },
++  exiting:  { opacity: 0 },
++  exited:  { opacity: 0 },
++}
++
+ const ChatContent = (props) => {
+   const classes = useStyles();
+-
+   const { conversation } = props;
+-  const { latestMessageText, otherUser } = conversation;
++  const { latestMessageText, otherUser, notificationCount } = conversation;
+ 
+   return (
+     <Box className={classes.root}>
+@@ -32,10 +64,14 @@ const ChatContent = (props) => {
+         <Typography className={classes.username}>
+           {otherUser.username}
+         </Typography>
+-        <Typography className={classes.previewText}>
++        <Typography className={`${classes.previewText} ${notificationCount > 0 && classes.newMessage}`}>
+           {latestMessageText}
+         </Typography>
+       </Box>
++      <Transition in={notificationCount > 0} timeout={duration}>{state=>(
++          <Box className={classes.unreadCount} style={{...transitionStyles[state]}}>{notificationCount > 0 ? notificationCount : ''}</Box>
++          )}
++      </Transition>
+     </Box>
+   );
+ };
+diff --git a/client/src/components/Sidebar/CurrentUser.js b/client/src/components/Sidebar/CurrentUser.js
+index df11aa6..8c8d516 100644
+--- a/client/src/components/Sidebar/CurrentUser.js
++++ b/client/src/components/Sidebar/CurrentUser.js
+@@ -11,7 +11,7 @@ const useStyles = makeStyles(() => ({
+     marginTop: 23,
+     marginLeft: 6,
+     display: "flex",
+-    alignItems: "center"
++    alignItems: "center",
+   },
+   subContainer: {
+     display: "flex",
+@@ -23,7 +23,9 @@ const useStyles = makeStyles(() => ({
+     letterSpacing: -0.23,
+     fontSize: 16,
+     fontWeight: "bold",
+-    marginLeft: 17
++    marginLeft: 17,
++    flexGrow: 0,
++    flexShrink: 0,
+   },
+   ellipsis: {
+     color: "#95A7C4",
+diff --git a/client/src/components/Sidebar/Sidebar.js b/client/src/components/Sidebar/Sidebar.js
+index 6344995..0df71b3 100644
+--- a/client/src/components/Sidebar/Sidebar.js
++++ b/client/src/components/Sidebar/Sidebar.js
+@@ -8,7 +8,9 @@ const useStyles = makeStyles(() => ({
+   root: {
+     paddingLeft: 21,
+     paddingRight: 21,
+-    flexGrow: 1
++    flexGrow: 1,
++    flexShrink: 1,
++    flexBasis: "20%",
+   },
+   title: {
+     fontSize: 20,
+@@ -33,8 +35,8 @@ const Sidebar = (props) => {
+         .filter((conversation) => conversation.otherUser.username.includes(searchTerm))
+         .sort((currConvo,nextConvo) => {
+           return (
+-            new Date(nextConvo.messages[nextConvo.messages.length - 1]?.updatedAt) - 
+-            new Date(currConvo.messages[currConvo.messages.length - 1]?.updatedAt)
++            new Date(nextConvo.messages[nextConvo.messages.length - 1]?.createdAt) - 
++            new Date(currConvo.messages[currConvo.messages.length - 1]?.createdAt)
+         )})
+         .map((conversation) => {
+           return <Chat conversation={conversation} key={conversation.otherUser.username} />;
+diff --git a/client/src/components/Sidebar/SidebarContainer.js b/client/src/components/Sidebar/SidebarContainer.js
+index fc447f7..dc0ea62 100644
+--- a/client/src/components/Sidebar/SidebarContainer.js
++++ b/client/src/components/Sidebar/SidebarContainer.js
+@@ -28,6 +28,12 @@ const SidebarContainer = (props) => {
+   return <Sidebar handleChange={handleChange} searchTerm={searchTerm} />;
+ };
+ 
++const mapStateToProps = (state) => {
++  return {
++    conversations: state.conversations,
++  };
++};
++
+ const mapDispatchToProps = (dispatch) => {
+   return {
+     searchUsers: (username) => {
+@@ -39,4 +45,4 @@ const mapDispatchToProps = (dispatch) => {
+   };
+ };
+ 
+-export default connect(null, mapDispatchToProps)(SidebarContainer);
++export default connect(mapStateToProps, mapDispatchToProps)(SidebarContainer);
+diff --git a/client/src/store/conversations.js b/client/src/store/conversations.js
+index 45ebbae..57c0927 100644
+--- a/client/src/store/conversations.js
++++ b/client/src/store/conversations.js
+@@ -4,6 +4,7 @@ import {
+   addSearchedUsersToStore,
+   removeOfflineUserFromStore,
+   addMessageToStore,
++  updateMessagesInStore
+ } from "./utils/reducerFunctions";
+ 
+ // ACTIONS
+@@ -15,6 +16,7 @@ const REMOVE_OFFLINE_USER = "REMOVE_OFFLINE_USER";
+ const SET_SEARCHED_USERS = "SET_SEARCHED_USERS";
+ const CLEAR_SEARCHED_USERS = "CLEAR_SEARCHED_USERS";
+ const ADD_CONVERSATION = "ADD_CONVERSATION";
++const UPDATE_READ_STATUS = "UPDATE_READ_STATUS"
+ 
+ // ACTION CREATORS
+ 
+@@ -67,6 +69,13 @@ export const addConversation = (recipientId, newMessage) => {
+   };
+ };
+ 
++export const updateMessages = (message) => {
++    return {
++    type: UPDATE_READ_STATUS,
++    message
++  }
++}
++
+ // REDUCER
+ 
+ const reducer = (state = [], action) => {
+@@ -91,6 +100,9 @@ const reducer = (state = [], action) => {
+         action.payload.recipientId,
+         action.payload.newMessage
+       );
++    case UPDATE_READ_STATUS: {
++        return updateMessagesInStore(state, action.message);
++      }
+     default:
+       return state;
+   }
+diff --git a/client/src/store/utils/reducerFunctions.js b/client/src/store/utils/reducerFunctions.js
+index 2f79c99..3c0a91e 100644
+--- a/client/src/store/utils/reducerFunctions.js
++++ b/client/src/store/utils/reducerFunctions.js
+@@ -1,3 +1,16 @@
++export const updateMessagesInStore = (state, message) => {
++  return state.map((convo) => {
++    if (convo.id !== message.conversationId) return convo
++    const messagesCopy = convo.messages.map(message => {
++      const messageCopy = {...message, read: true}
++      return messageCopy
++    })
++    const convoCopy = { ...convo, messagesCopy }
++    convoCopy.notificationCount = 0
++    return convoCopy
++  });
++};
++
+ export const addMessageToStore = (state, payload) => {
+   const { message, sender } = payload;
+   // if sender isn't null, that means the message needs to be put in a brand new convo
+@@ -8,17 +21,17 @@ export const addMessageToStore = (state, payload) => {
+       messages: [message],
+     };
+     newConvo.latestMessageText = message.text;
++    if (message.senderId === sender.id) {
++      newConvo.notificationCount = 1;
++    }
+     return [newConvo, ...state];
+   }
+ 
+   return state.map((convo) => {
+-    if (convo.id === message.conversationId) {
+-      const convoCopy = { ...convo, messages: [...convo.messages, message] }
+-      convoCopy.latestMessageText = message.text
+-      return convoCopy
+-    } else {
+-      return convo;
+-    }
++    if (convo.id !== message.conversationId) return convo
++    const convoCopy = { ...convo, messages: [...convo.messages, message] }
++    convoCopy.latestMessageText = message.text
++    return convoCopy
+   });
+ };
+ 
+diff --git a/client/src/store/utils/thunkCreators.js b/client/src/store/utils/thunkCreators.js
+index 79bac4f..39bc147 100644
+--- a/client/src/store/utils/thunkCreators.js
++++ b/client/src/store/utils/thunkCreators.js
+@@ -7,6 +7,7 @@ import {
+   setSearchedUsers,
+ } from "../conversations";
+ import { gotUser, setFetchingStatus } from "../user";
++import { updateMessages } from "../conversations"
+ 
+ axios.interceptors.request.use(async function (config) {
+   const token = await localStorage.getItem("messenger-token");
+@@ -17,6 +18,13 @@ axios.interceptors.request.use(async function (config) {
+ 
+ // USER THUNK CREATORS
+ 
++export const updateLastViewed = (message) => async (dispatch) => {
++        const { data } = await axios.put(`/api/messages/`,{
++          message: message
++        });
++        dispatch(updateMessages(message))
++}
++
+ export const fetchUser = () => async (dispatch) => {
+   dispatch(setFetchingStatus(true));
+   try {
+@@ -115,4 +123,5 @@ export const searchUsers = (searchTerm) => async (dispatch) => {
+   } catch (error) {
+     console.error(error);
+   }
++
+ };
+diff --git a/server/db/models/conversation.js b/server/db/models/conversation.js
+index b5c1dee..4e3be8a 100644
+--- a/server/db/models/conversation.js
++++ b/server/db/models/conversation.js
+@@ -1,8 +1,9 @@
+-const { Op } = require("sequelize");
++const Sequelize = require("sequelize");
++const { Op } = Sequelize;
+ const db = require("../db");
+ const Message = require("./message");
+ 
+-const Conversation = db.define("conversation", {});
++const Conversation = db.define("conversation",{});
+ 
+ // find conversation given two user Ids
+ 
+diff --git a/server/db/models/message.js b/server/db/models/message.js
+index 576a2a3..388dc8b 100644
+--- a/server/db/models/message.js
++++ b/server/db/models/message.js
+@@ -10,6 +10,11 @@ const Message = db.define("message", {
+     type: Sequelize.INTEGER,
+     allowNull: false,
+   },
++  read: {
++    type: Sequelize.BOOLEAN,
++    defaultValue: false,
++    allowNull: false,
++  }
+ });
+ 
+ module.exports = Message;
+diff --git a/server/routes/api/conversations.js b/server/routes/api/conversations.js
+index 8ced594..76cabc7 100644
+--- a/server/routes/api/conversations.js
++++ b/server/routes/api/conversations.js
+@@ -46,7 +46,7 @@ router.get("/", async (req, res, next) => {
+         },
+       ],
+     });
+-
++    
+     for (let i = 0; i < conversations.length; i++) {
+       const convo = conversations[i];
+       const convoJSON = convo.toJSON();
+@@ -69,6 +69,21 @@ router.get("/", async (req, res, next) => {
+ 
+       // set properties for notification count and latest message preview
+       convoJSON.latestMessageText = convoJSON.messages[convoJSON.messages.length - 1].text;
++      convoJSON.notificationCount = 0
++      let shouldBeSetToRead = false
++      for (let j = convoJSON.messages.length - 1; j >= 0; j--) {
++        const message = convoJSON.messages[j] || {};
++        if (message.read === true) break
++        if (message.senderId === userId) {
++          message.read = true
++          shouldBeSetToRead = true
++        }
++        else if (shouldBeSetToRead) message.read = true
++        else {
++          convoJSON.notificationCount++
++        }
++      }
++
+       conversations[i] = convoJSON;
+     }
+ 
+diff --git a/server/routes/api/messages.js b/server/routes/api/messages.js
+index b2d97b3..4f1e7ef 100644
+--- a/server/routes/api/messages.js
++++ b/server/routes/api/messages.js
+@@ -1,5 +1,6 @@
+ const router = require("express").Router();
+ const { Conversation, Message } = require("../../db/models");
++const { Op } = require("sequelize");
+ const onlineUsers = require("../../onlineUsers");
+ 
+ // expects {recipientId, text, conversationId } in body (conversationId will be null if no conversation exists yet)
+@@ -37,10 +38,38 @@ router.post("/", async (req, res, next) => {
+       text,
+       conversationId: conversation.id,
+     });
++
+     res.json({ message, sender });
+   } catch (error) {
+     next(error);
+   }
+ });
+ 
++router.put("/", async (req, res, next) => {
++
++  const { createdAt, conversationId: convoId } = req.body.message
++
++  console.log(createdAt, convoId)
++
++  try {
++    if (!req.user) {
++      return res.sendStatus(401);
++    }
++    const messages = await Message.update({
++      read: true
++      },{
++      where: { [Op.and]: {
++        createdAt: { [Op.lte]: createdAt },
++        conversationId: convoId
++        }
++    }
++    })
++
++    res.json(messages)
++  } catch (error) {
++    next(error)
++  }
++})
++
++
+ module.exports = router;

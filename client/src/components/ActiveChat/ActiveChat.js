@@ -9,7 +9,6 @@ const useStyles = makeStyles(() => ({
   root: {
     display: "flex",
     flexGrow: 8,
-    flexShrink: 8,
     flexBasis: 0, // so it calcs growth from 0 -- width does not grow unexpectedly!
     flexDirection: "column"
   },
@@ -25,17 +24,31 @@ const useStyles = makeStyles(() => ({
 
 const ActiveChat = (props) => {
   const classes = useStyles();
-  const { user } = props;
+  const { user, updateLastViewed } = props;
   const conversation = props.conversation || {};
+  const usePrevious = (value) => {
+    const ref = useRef(null)
+    useEffect(()=>{
+      ref.current = value
+    })
+    return ref.current
+  }
+
+  const useHasValueUnchanged = (value) => {
+    return usePrevious(value) === value
+  }
+
+  const activeConvoChanged = !useHasValueUnchanged(props.activeConversation)
 
   useEffect(() => {
   const update = async () => {
-      if (conversation.messages) {
-        await props.updateLastViewed(conversation.messages[conversation.messages.length - 1])
+      if (activeConvoChanged && conversation.messages) {
+        await updateLastViewed(conversation.messages[conversation.messages.length - 1])
       }
     }
     update()
-  },[props.activeConversation]);
+  },[props.activeConversation, activeConvoChanged, conversation.messages, updateLastViewed]);
+
 
   return (
     <Box className={classes.root}>

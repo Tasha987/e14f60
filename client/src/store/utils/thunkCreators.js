@@ -5,9 +5,9 @@ import {
   addConversation,
   setNewMessage,
   setSearchedUsers,
+  updateMessages
 } from "../conversations";
 import { gotUser, setFetchingStatus } from "../user";
-import { updateMessages } from "../conversations"
 
 axios.interceptors.request.use(async function (config) {
   const token = await localStorage.getItem("messenger-token");
@@ -19,10 +19,10 @@ axios.interceptors.request.use(async function (config) {
 // USER THUNK CREATORS
 
 export const updateLastViewed = (message) => async (dispatch) => {
-        const { data } = await axios.put(`/api/messages/`,{
-          message: message
-        });
-        dispatch(updateMessages(message))
+  await axios.put(`/api/messages/`,{
+    message: message
+  });
+  dispatch(updateMessages(message))
 }
 
 export const fetchUser = () => async (dispatch) => {

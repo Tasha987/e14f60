@@ -21,18 +21,17 @@ export const addMessageToStore = (state, payload) => {
       messages: [message],
     };
     newConvo.latestMessageText = message.text;
-    if (message.senderId === sender.id) {
-      newConvo.notificationCount = 1;
-    }
     return [newConvo, ...state];
   }
-
   return state.map((convo) => {
-    if (convo.id !== message.conversationId) return convo
-    const convoCopy = { ...convo, messages: [...convo.messages, message] }
-    convoCopy.latestMessageText = message.text
-    return convoCopy
-  });
+    if (convo.id === message.conversationId) {
+        const convoCopy = { ...convo, messages: [...convo.messages, message] }
+        convoCopy.latestMessageText = message.text
+        return convoCopy
+      } else {
+        return convo;
+      }
+  })
 };
 
 export const addOnlineUserToStore = (state, id) => {
