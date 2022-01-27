@@ -49,8 +49,6 @@ router.put("/", async (req, res, next) => {
 
   const { createdAt, conversationId: convoId } = req.body.message
 
-  console.log(createdAt, convoId)
-
   try {
     if (!req.user) {
       return res.sendStatus(401);
@@ -64,7 +62,6 @@ router.put("/", async (req, res, next) => {
         }
     }
     })
-
     res.json(messages)
   } catch (error) {
     next(error)
