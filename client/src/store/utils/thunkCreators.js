@@ -18,7 +18,7 @@ axios.interceptors.request.use(async function (config) {
 
 // USER THUNK CREATORS
 
-export const updateLastViewed = (message) => async (dispatch) => {
+export const updateMessageReadCount = (message) => async (dispatch) => {
   await axios.put(`/api/messages/`,{
     message: message
   });

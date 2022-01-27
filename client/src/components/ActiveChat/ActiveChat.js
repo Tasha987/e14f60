@@ -3,7 +3,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { Box } from "@material-ui/core";
 import { Input, Header, Messages } from "./index";
 import { connect } from "react-redux";
-import { updateLastViewed } from "./../../store/utils/thunkCreators";
+import { updateMessageReadCount } from "./../../store/utils/thunkCreators";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -24,7 +24,7 @@ const useStyles = makeStyles(() => ({
 
 const ActiveChat = (props) => {
   const classes = useStyles();
-  const { user, updateLastViewed } = props;
+  const { user, updateMessageReadCount } = props;
   const conversation = props.conversation || {};
   const usePrevious = (value) => {
     const ref = useRef(null)
@@ -43,11 +43,11 @@ const ActiveChat = (props) => {
   useEffect(() => {
   const update = async () => {
       if (activeConvoChanged && conversation.messages) {
-        await updateLastViewed(conversation.messages[conversation.messages.length - 1])
+        await updateMessageReadCount(conversation.messages[conversation.messages.length - 1])
       }
     }
     update()
-  },[props.activeConversation, activeConvoChanged, conversation.messages, updateLastViewed]);
+  },[props.activeConversation, activeConvoChanged, conversation.messages, updateMessageReadCount]);
 
 
   return (
@@ -90,8 +90,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    updateLastViewed: (id) => {
-      dispatch(updateLastViewed(id))
+    updateMessageReadCount: (id) => {
+      dispatch(updateMessageReadCount(id))
     }
   };
 };
