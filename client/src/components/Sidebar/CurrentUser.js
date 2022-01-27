@@ -11,7 +11,7 @@ const useStyles = makeStyles(() => ({
     marginTop: 23,
     marginLeft: 6,
     display: "flex",
-    alignItems: "center"
+    alignItems: "center",
   },
   subContainer: {
     display: "flex",
@@ -23,7 +23,9 @@ const useStyles = makeStyles(() => ({
     letterSpacing: -0.23,
     fontSize: 16,
     fontWeight: "bold",
-    marginLeft: 17
+    marginLeft: 17,
+    flexGrow: 0,
+    flexShrink: 0,
   },
   ellipsis: {
     color: "#95A7C4",

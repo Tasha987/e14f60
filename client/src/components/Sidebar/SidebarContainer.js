@@ -28,6 +28,12 @@ const SidebarContainer = (props) => {
   return <Sidebar handleChange={handleChange} searchTerm={searchTerm} />;
 };
 
+const mapStateToProps = (state) => {
+  return {
+    conversations: state.conversations,
+  };
+};
+
 const mapDispatchToProps = (dispatch) => {
   return {
     searchUsers: (username) => {
@@ -39,4 +45,4 @@ const mapDispatchToProps = (dispatch) => {
   };
 };
 
-export default connect(null, mapDispatchToProps)(SidebarContainer);
+export default connect(mapStateToProps, mapDispatchToProps)(SidebarContainer);

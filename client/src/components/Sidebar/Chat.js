@@ -7,6 +7,7 @@ import { connect } from "react-redux";
 
 const useStyles = makeStyles((theme) => ({
   root: {
+    position: "relative",
     borderRadius: 8,
     height: 80,
     boxShadow: "0 2px 10px 0 rgba(88,133,196,0.05)",
@@ -16,14 +17,14 @@ const useStyles = makeStyles((theme) => ({
     "&:hover": {
       cursor: "grab"
     }
-  }
+  },
 }));
 
 const Chat = (props) => {
   const classes = useStyles();
   const { conversation } = props;
   const { otherUser } = conversation;
-
+  
   const handleClick = async (conversation) => {
     await props.setActiveChat(conversation.otherUser.username);
   };
@@ -45,7 +46,7 @@ const mapDispatchToProps = (dispatch) => {
   return {
     setActiveChat: (id) => {
       dispatch(setActiveChat(id));
-    }
+    },
   };
 };
 
