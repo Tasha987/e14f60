@@ -19,10 +19,14 @@ axios.interceptors.request.use(async function (config) {
 // USER THUNK CREATORS
 
 export const updateMessageReadCount = (message) => async (dispatch) => {
-  await axios.put(`/api/messages/`,{
-    message: message
-  });
-  dispatch(updateMessages(message))
+  try {
+    await axios.put(`/api/messages/`,{
+      message: message
+    });
+    dispatch(updateMessages(message))
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 export const fetchUser = () => async (dispatch) => {
@@ -109,7 +113,6 @@ export const postMessage = (body) => async (dispatch) => {
     } else {
       dispatch(setNewMessage(data.message));
     }
-    
     sendMessage(data, body);
   } catch (error) {
     console.error(error);

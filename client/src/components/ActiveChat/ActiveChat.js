@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Box } from "@material-ui/core";
 import { Input, Header, Messages } from "./index";
@@ -26,28 +26,18 @@ const ActiveChat = (props) => {
   const classes = useStyles();
   const { user, updateMessageReadCount } = props;
   const conversation = props.conversation || {};
-  const usePrevious = (value) => {
-    const ref = useRef(null)
-    useEffect(()=>{
-      ref.current = value
-    })
-    return ref.current
-  }
 
-  const useHasValueUnchanged = (value) => {
-    return usePrevious(value) === value
-  }
-
-  const activeConvoChanged = !useHasValueUnchanged(props.activeConversation)
+  const shouldUpdateMessageCount = !!(props.activeConversation === conversation.otherUser?.username && conversation.otherUser?.online && conversation.messages)
+  // !! is to make sure this returns a boolean
 
   useEffect(() => {
   const update = async () => {
-      if (activeConvoChanged && conversation.messages) {
+      if (shouldUpdateMessageCount) {
         await updateMessageReadCount(conversation.messages[conversation.messages.length - 1])
       }
     }
     update()
-  },[props.activeConversation, activeConvoChanged, conversation.messages, updateMessageReadCount]);
+  },[shouldUpdateMessageCount, conversation.messages?.length]);
 
 
   return (
