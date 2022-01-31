@@ -74,7 +74,4 @@ router.put("/", async (req, res, next) => {
   }
 })
 
-// (convo.id !== message.conversationId || message.senderId !== convo.otherUser.id) return convo
-
-
 module.exports = router;
