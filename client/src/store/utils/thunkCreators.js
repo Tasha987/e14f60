@@ -20,10 +20,10 @@ axios.interceptors.request.use(async function (config) {
 
 export const updateMessageReadCount = (message) => async (dispatch) => {
   try {
-    await axios.put(`/api/messages/`,{
+    const { data } = await axios.put(`/api/messages/`,{
       message: message
     });
-    dispatch(updateMessages(message))
+    dispatch(updateMessages(data))
   } catch (error) {
     console.error(error)
   }

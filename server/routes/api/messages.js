@@ -47,26 +47,34 @@ router.post("/", async (req, res, next) => {
 
 router.put("/", async (req, res, next) => {
 
-  const { createdAt, conversationId: convoId } = req.body.message
+  const { createdAt, conversationId: convoId, id } = req.body.message
 
   try {
     if (!req.user) {
       return res.sendStatus(401);
     }
-    const messages = await Message.update({
+    await Message.update({
       read: true
       },{
       where: { [Op.and]: {
         createdAt: { [Op.lte]: createdAt },
-        conversationId: convoId
+        conversationId: convoId,
+        senderId: {
+          [Op.ne]: req.user.id
         }
-    }
+        }
+      }
     })
-    res.json(messages)
+    const message = await Message.findOne({
+      where: {id: id}
+    })
+    res.json(message)
   } catch (error) {
     next(error)
   }
 })
+
+// (convo.id !== message.conversationId || message.senderId !== convo.otherUser.id) return convo
 
 
 module.exports = router;

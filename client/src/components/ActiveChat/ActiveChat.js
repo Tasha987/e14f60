@@ -26,18 +26,17 @@ const ActiveChat = (props) => {
   const classes = useStyles();
   const { user, updateMessageReadCount } = props;
   const conversation = props.conversation || {};
-
-  const shouldUpdateMessageCount = !!(props.activeConversation === conversation.otherUser?.username && conversation.otherUser?.online && conversation.messages)
+  
+  const shouldUpdateMessageCount = !!(props.activeConversation === conversation.otherUser?.username && conversation.messages)
   // !! is to make sure this returns a boolean
 
   useEffect(() => {
-  const update = async () => {
-      if (shouldUpdateMessageCount) {
-        await updateMessageReadCount(conversation.messages[conversation.messages.length - 1])
-      }
+    const update = async () => {
+      await updateMessageReadCount(conversation.messages[conversation.messages.length - 1])
     }
-    update()
-  },[shouldUpdateMessageCount, conversation.messages?.length]);
+    if (shouldUpdateMessageCount) update()
+    // eslint-disable-next-line
+  },[shouldUpdateMessageCount, conversation.messages?.length, updateMessageReadCount]);
 
 
   return (
