@@ -82,14 +82,6 @@ router.get("/", async (req, res, next) => {
           message.read = shouldBeSetToRead
           convoJSON.notificationCount += !message.read  
         }
-        // else if (message.senderId === userId) {
-        //   message.read = true
-        //   shouldBeSetToRead = true
-        // }
-        // else if (shouldBeSetToRead) message.read = true
-        // else if (message.senderId === convoJSON.otherUser.id) {
-        //   convoJSON.notificationCount++
-        // }
       }
 
       conversations[i] = convoJSON;
