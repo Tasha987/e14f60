@@ -26,15 +26,20 @@ const ActiveChat = (props) => {
   const classes = useStyles();
   const { user, updateMessageReadCount } = props;
   const conversation = props.conversation || {};
-  
-  const shouldUpdateMessageCount = !!(props.activeConversation === conversation.otherUser?.username && conversation.messages)
+
+  const latestMessage = conversation.messages?.[conversation.messages.length - 1] || {}
+
   // !! is to make sure this returns a boolean
+  const shouldUpdateMessageCount = !!(
+    props.activeConversation === conversation.otherUser?.username && conversation.messages && conversation.otherUser.id === latestMessage.senderId
+  )
 
   useEffect(() => {
     const update = async () => {
-      await updateMessageReadCount(conversation.messages[conversation.messages.length - 1])
+      await updateMessageReadCount(latestMessage, user.id)
     }
     if (shouldUpdateMessageCount) update()
+    
     // eslint-disable-next-line
   },[shouldUpdateMessageCount, conversation.messages?.length, updateMessageReadCount]);
 
@@ -79,8 +84,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    updateMessageReadCount: (id) => {
-      dispatch(updateMessageReadCount(id))
+    updateMessageReadCount: (message, recipientId) => {
+      dispatch(updateMessageReadCount(message, recipientId))
     }
   };
 };

@@ -1,6 +1,6 @@
 export const updateMessagesInStore = (state, message) => {
   return state.map((convo) => {
-    if (convo.id !== message.conversationId || message.senderId !== convo.otherUser.id) return convo
+    if (convo.id !== message.conversationId) return convo
     const messagesCopy = convo.messages.map(message => {
       const messageCopy = { ...message, read: true }
       return messageCopy

@@ -18,12 +18,14 @@ axios.interceptors.request.use(async function (config) {
 
 // USER THUNK CREATORS
 
-export const updateMessageReadCount = (message) => async (dispatch) => {
+export const updateMessageReadCount = (message, recipientId) => async (dispatch) => {
   try {
-    const { data } = await axios.put(`/api/messages/`,{
-      message: message
+    await axios.put(`/api/messages/`,{
+      message: message,
+      recipientId: recipientId
     });
-    dispatch(updateMessages(data))
+    dispatch(updateMessages(message))
+    socket.emit("message-read", message)
   } catch (error) {
     console.error(error)
   }

@@ -47,6 +47,11 @@ io.on("connection", (socket) => {
     });
   });
 
+  // update message on senders side to read when the other user views it
+  socket.on("message-read", (message) => {
+    socket.broadcast.emit("message-read", message);
+  });
+
   socket.on("logout", (id) => {
     if (onlineUsers.includes(id)) {
       userIndex = onlineUsers.indexOf(id);

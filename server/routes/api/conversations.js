@@ -69,21 +69,12 @@ router.get("/", async (req, res, next) => {
 
       // set properties for notification count and latest message preview
       convoJSON.latestMessageText = convoJSON.messages[convoJSON.messages.length - 1].text;
-      convoJSON.notificationCount = 0
-      let shouldBeSetToRead = false
-      for (let j = convoJSON.messages.length - 1; j >= 0; j--) {
-        const message = convoJSON.messages[j] || {};
-        if (message.read) break
-        else if (message.senderId === userId) {
-          shouldBeSetToRead = true;
-          continue
-        }
-        else if (message.senderId === convoJSON.otherUser.id) {
-          message.read = shouldBeSetToRead
-          convoJSON.notificationCount += !message.read  
-        }
-      }
 
+      // sets the initial notification counts based on unread messages not sent by the user
+      convoJSON.notificationCount = convoJSON.messages.reduce((count, message) => {
+        return count + !(message.read || message.senderId === userId)
+      },0)
+      
       conversations[i] = convoJSON;
     }
 

@@ -47,17 +47,17 @@ router.post("/", async (req, res, next) => {
 
 router.put("/", async (req, res, next) => {
 
-  const { createdAt, conversationId: convoId, id } = req.body.message
+  const { message: {conversationId: convoId, senderId}, recipientId } = req.body
 
   try {
-    if (!req.user) {
+    if (!(req.user && (req.user.id === recipientId || req.user.id === senderId))) {
       return res.sendStatus(401);
     }
     await Message.update({
       read: true
       },{
       where: { [Op.and]: {
-        createdAt: { [Op.lte]: createdAt },
+        read: false,
         conversationId: convoId,
         senderId: {
           [Op.ne]: req.user.id
@@ -65,10 +65,8 @@ router.put("/", async (req, res, next) => {
         }
       }
     })
-    const message = await Message.findOne({
-      where: {id: id}
-    })
-    res.json(message)
+
+    res.end('message updated')
   } catch (error) {
     next(error)
   }
