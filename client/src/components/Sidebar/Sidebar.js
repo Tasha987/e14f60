@@ -9,7 +9,7 @@ const useStyles = makeStyles(() => ({
     paddingLeft: 21,
     paddingRight: 21,
     flexGrow: 1,
-    flexBasis: "20%",
+    flexShrink: 1,
   },
   title: {
     fontSize: 20,

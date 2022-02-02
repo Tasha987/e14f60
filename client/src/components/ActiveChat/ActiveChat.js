@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import { Box } from "@material-ui/core";
 import { Input, Header, Messages } from "./index";
@@ -27,7 +27,9 @@ const ActiveChat = (props) => {
   const { user, updateMessageReadCount } = props;
   const conversation = props.conversation || {};
 
-  const latestMessage = conversation.messages?.[conversation.messages.length - 1] || {}
+  const latestMessage = useMemo(()=>{
+    return conversation.messages?.[conversation.messages.length - 1] || {}
+  },[conversation.messages?.length])
 
   // !! is to make sure this returns a boolean
   const shouldUpdateMessageCount = !!(
@@ -41,7 +43,7 @@ const ActiveChat = (props) => {
     if (shouldUpdateMessageCount) update()
     
     // eslint-disable-next-line
-  },[shouldUpdateMessageCount, conversation.messages?.length, updateMessageReadCount]);
+  },[shouldUpdateMessageCount, conversation.messages?.length, updateMessageReadCount, latestMessage, user.id]);
 
 
   return (

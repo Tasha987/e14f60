@@ -47,11 +47,12 @@ router.post("/", async (req, res, next) => {
 
 router.put("/", async (req, res, next) => {
 
-  const { message: {conversationId: convoId, senderId}, recipientId } = req.body
+  const { message: { conversationId: convoId, senderId }, recipientId } = req.body
 
   try {
-    if (!(req.user && (req.user.id === recipientId || req.user.id === senderId))) {
-      return res.sendStatus(401);
+    // restrict access to only the sender and the reciever of the message
+    if (!req.user || req.user.id !== recipientId && req.user.id !== senderId) {
+      return res.sendStatus(403);
     }
     await Message.update({
       read: true
