@@ -8,7 +8,8 @@ const useStyles = makeStyles(() => ({
   root: {
     paddingLeft: 21,
     paddingRight: 21,
-    flexGrow: 1
+    flexGrow: 1,
+    flexShrink: 1,
   },
   title: {
     fontSize: 20,
@@ -33,8 +34,8 @@ const Sidebar = (props) => {
         .filter((conversation) => conversation.otherUser.username.includes(searchTerm))
         .sort((currConvo,nextConvo) => {
           return (
-            new Date(nextConvo.messages[nextConvo.messages.length - 1]?.updatedAt) - 
-            new Date(currConvo.messages[currConvo.messages.length - 1]?.updatedAt)
+            new Date(nextConvo.messages[nextConvo.messages.length - 1]?.createdAt) - 
+            new Date(currConvo.messages[currConvo.messages.length - 1]?.createdAt)
         )})
         .map((conversation) => {
           return <Chat conversation={conversation} key={conversation.otherUser.username} />;

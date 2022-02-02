@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { Conversation, Message } = require("../../db/models");
+const { Op } = require("sequelize");
 const onlineUsers = require("../../onlineUsers");
 
 // expects {recipientId, text, conversationId } in body (conversationId will be null if no conversation exists yet)
@@ -37,10 +38,39 @@ router.post("/", async (req, res, next) => {
       text,
       conversationId: conversation.id,
     });
+
     res.json({ message, sender });
   } catch (error) {
     next(error);
   }
 });
+
+router.put("/", async (req, res, next) => {
+
+  const { message: { conversationId: convoId, senderId }, recipientId } = req.body
+
+  try {
+    // restrict access to only the sender and the reciever of the message
+    if (!req.user || req.user.id !== recipientId && req.user.id !== senderId) {
+      return res.sendStatus(403);
+    }
+    await Message.update({
+      read: true
+      },{
+      where: { [Op.and]: {
+        read: false,
+        conversationId: convoId,
+        senderId: {
+          [Op.ne]: req.user.id
+        }
+        }
+      }
+    })
+
+    res.end('message updated')
+  } catch (error) {
+    next(error)
+  }
+})
 
 module.exports = router;

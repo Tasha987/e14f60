@@ -1,3 +1,16 @@
+export const updateMessagesInStore = (state, message) => {
+  return state.map((convo) => {
+    if (convo.id !== message.conversationId) return convo
+    const messagesCopy = convo.messages.map(message => {
+      const messageCopy = { ...message, read: true }
+      return messageCopy
+    })
+    const convoCopy = { ...convo, messages: messagesCopy }
+    convoCopy.notificationCount = 0
+    return convoCopy
+  });
+};
+
 export const addMessageToStore = (state, payload) => {
   const { message, sender } = payload;
   // if sender isn't null, that means the message needs to be put in a brand new convo
@@ -8,18 +21,19 @@ export const addMessageToStore = (state, payload) => {
       messages: [message],
     };
     newConvo.latestMessageText = message.text;
+    newConvo.notificationCount = newConvo.otherUser.id === message.senderId ? 1 : 0;
     return [newConvo, ...state];
   }
-
   return state.map((convo) => {
     if (convo.id === message.conversationId) {
-      const convoCopy = { ...convo, messages: [...convo.messages, message] }
-      convoCopy.latestMessageText = message.text
-      return convoCopy
-    } else {
-      return convo;
-    }
-  });
+        const convoCopy = { ...convo, messages: [...convo.messages, message] }
+        convoCopy.notificationCount = convo.otherUser.id === message.senderId ? convoCopy.notificationCount + 1 : 0 // only increases count on otherUser
+        convoCopy.latestMessageText = message.text;
+        return convoCopy;
+      } else {
+        return convo;
+      }
+  })
 };
 
 export const addOnlineUserToStore = (state, id) => {
