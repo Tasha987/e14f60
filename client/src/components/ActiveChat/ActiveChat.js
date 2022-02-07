@@ -29,7 +29,8 @@ const ActiveChat = (props) => {
 
   const latestMessage = useMemo(()=>{
     return conversation.messages?.[conversation.messages.length - 1] || {}
-  },[conversation.messages?.length])
+    // eslint-disable-next-line
+  },[conversation.messages?.length, props.activeConversation])
 
   // !! is to make sure this returns a boolean
   const shouldUpdateMessageCount = !!(

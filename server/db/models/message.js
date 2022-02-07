@@ -14,6 +14,11 @@ const Message = db.define("message", {
     type: Sequelize.BOOLEAN,
     defaultValue: false,
     allowNull: false,
+  },
+  readBy: {
+    type: Sequelize.ARRAY({type: Sequelize.INTEGER}),
+    defaultValue: [],
+    allowNull: false,
   }
 });
 
